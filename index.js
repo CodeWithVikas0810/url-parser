@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const dns = require('dns');
+let count = 1
+let urlData = {}
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -21,29 +23,33 @@ app.get('/', function (req, res) {
 
 app.post('/api/shorturl', function (req, res) {
   const originalUrl = req.body.url
-  let count = 0;
-  console.log(originalUrl)
+
   let hostName = new URL(originalUrl).hostname;
   dns.lookup(hostName, (err, address) => {
     if (err) {
-      res.json({
-        error: 'Invalid URL'
+      return res.json({
+        error: 'invalid url'
       })
     } else {
       res.json({
         "original_url": originalUrl,
-        "short-url": ++count
+        "short-url": count
       })
     }
+    const shortUrl = count;
+    urlData[shortUrl] = originalUrl;
+    count++;
   })
 
-  // logger();
+
 })
 
-// const logger = function(req,res,next){
-//   console.log(req.body.url)
-//   next();
-// }
+app.get('/api/shorturl/:num?', function (req, res) {
+  const shortUrl = req.params.num;
+  const originalUrl = urlData[shortUrl];
+
+  res.redirect(originalUrl)
+})
 // Your first API endpoint
 app.get('/api/hello', function (req, res) {
   res.json({
